@@ -35,7 +35,8 @@ def datefromid (id) :
 # id to consultant's name/last name
 def consultantfromid (id) :
     consultant = models.Consultant.objects.filter(id=id).first()
-    return consultant.name + ' ' + consultant.last_name
+    serializer = ConsultantSerializer(consultant).data
+    return [consultant.name + ' ' + consultant.last_name  ,serializer['profile_photo'] ]
 
 
 # id to kind
@@ -175,6 +176,8 @@ class VisitViewset(APIView):
 
         df = pd.DataFrame(serializer.data)
         df['consultant'] = df ['consultant'].apply(consultantfromid)
+        df['consultant_photo'] = [x[1] for x in df ['consultant']]
+        df['consultant'] = [x[0] for x in df ['consultant']]
         df['time'] = df ['date'].apply(timefromid)
         df['date'] = df ['date'].apply(datefromid)
         df['kind'] = df ['kind'].apply(kindfromid)
@@ -203,7 +206,9 @@ class VisitConsultationsViewset (APIView) :
         visit = [serializers.VisitSerializer(x).data for x in visit]
         df = pd.DataFrame(visit)
         print(df)
-        df ['consultant'] = df['consultant'].apply(consultantfromid)
+        df['consultant'] = df ['consultant'].apply(consultantfromid)
+        df['consultant_photo'] = [x[1] for x in df ['consultant']]
+        df['consultant'] = [x[0] for x in df ['consultant']]
         df ['customer'] = df['customer'].apply(userfromid)
         df ['kind'] = df['kind'].apply(kindfromid)
         df['time'] = df ['date'].apply(timefromid)
@@ -233,6 +238,8 @@ class VisitConsultationsDetialViewset(APIView):
         df = pd.DataFrame(serialized_visits)
         print(df)
         df['consultant'] = df ['consultant'].apply(consultantfromid)
+        df['consultant_photo'] = [x[1] for x in df ['consultant']]
+        df['consultant'] = [x[0] for x in df ['consultant']]
         df['customer'] = df ['customer'].apply(userfromid)
         df['kind'] = df ['kind'].apply(kindfromid)
         df['time'] = df ['date'].apply(timefromid)
@@ -247,10 +254,11 @@ class VisitConsultationsDetialViewset(APIView):
         df = df.drop(columns='questions')
         df = df.to_dict('records')[0]
         return Response(df, status=status.HTTP_200_OK)
-
-
+    
+    
 
 # Question
+'''
 class QuestionViewset(APIView):
     def post (self, request) :
         Authorization = request.headers.get('Authorization')
@@ -282,6 +290,9 @@ class QuestionViewset(APIView):
             return Response ([],status=status.HTTP_200_OK)
         serializer = serializers.QuestionSerializer(question , many = True)
         return Response (serializer.data , status=status.HTTP_200_OK)
+
+'''
+
 
 
 

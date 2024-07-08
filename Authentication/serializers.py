@@ -25,6 +25,16 @@ class AuthSerializer(serializers.ModelSerializer):
 
 
 class ConsultantSerializer(serializers.ModelSerializer):
+    from rest_framework import serializers
+from .models import Consultant
+
+class ConsultantSerializer(serializers.ModelSerializer):
+    profile_photo = serializers.ImageField(max_length=None, use_url=True)
+
+    class Meta:
+        model = Consultant
+        fields = '__all__'
+
     class Meta:
         model = models.Consultant
         fields = '__all__'   

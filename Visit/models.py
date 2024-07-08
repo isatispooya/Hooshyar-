@@ -31,7 +31,7 @@ class Question(models.Model):
 class KindOfCounseling(models.Model):
     title = models.CharField(max_length=100 , unique= True)
     price = models.IntegerField()
-    icon = models.ImageField(upload_to='Hooshyar/Static/images/' , blank=True, null=True)
+    icon = models.ImageField(upload_to='Static/images/' , blank=True, null=True)
 
 
 class Visit(models.Model):

@@ -25,6 +25,8 @@ class VisitSerializer(serializers.ModelSerializer):
 
 
 class KindOfCounselingSerializer(serializers.ModelSerializer):
+    icon = serializers.ImageField(max_length=None, use_url=True)
+
     class Meta:
         model = models.KindOfCounseling
         fields = '__all__'   

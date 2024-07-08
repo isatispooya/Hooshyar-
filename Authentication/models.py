@@ -37,7 +37,7 @@ class Consultant (models.Model) :
     email = models.EmailField(unique=True , null=True , blank=True)
     rank = models.IntegerField()
     postion = models.CharField(max_length=100)
-    profile_photo = models.ImageField(upload_to='Hooshyar/Static/images/' , blank=True, null=True)
+    profile_photo = models.ImageField(upload_to='Static/images/' , blank=True, null=True)
 
     def __str__(self):
         return f'{self.name} - {self.last_name}'
