@@ -11,7 +11,18 @@ import requests
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer
 from . import fun
+import random
 
+
+frm ='30001526'
+usrnm = 'isatispooya'
+psswrd ='5246043adeleh'
+
+def SendSms(snd,txt):
+    txt = f'کد تایید :{txt}'
+    resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
+    print(txt)
+    return resp
 
 
 # captcha
@@ -27,7 +38,7 @@ class OtpViewset  (APIView) :
         captcha = GuardPyCaptcha ()
 
         captcha = captcha.check_response (request.data ['encrypted_response'],request.data ['captcha'] )
-        if False :
+        if not captcha :
             result = {'message' : 'کد کپچا صحیح نیست'}
             return Response (result , status= status.HTTP_406_NOT_ACCEPTABLE)
         mobile = request.data ['mobile']
@@ -40,9 +51,10 @@ class OtpViewset  (APIView) :
         except models.Auth.DoesNotExist: 
             result = {'registered' : False , 'message' : 'کد تایید ارسال شد'}    
 
-        code = 11111 #random.randint(10000,99999)
+        code = random.randint(10000,99999)
         otp = models.Otp(mobile=mobile,code =code)
         otp.save()
+        SendSms(mobile ,code)
 
         return Response(result,status=status.HTTP_200_OK)
 
@@ -103,7 +115,7 @@ class OtpConsultant (APIView) :
     def post (self, request) :
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(request.data['encrypted_response'] , request.data ['captcha'])
-        if False :
+        if not captcha :
             return Response({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_406_NOT_ACCEPTABLE)
         mobile = request.data ['mobile']
         if not mobile :
@@ -114,9 +126,10 @@ class OtpConsultant (APIView) :
         except models.Consultant.DoesNotExist:
             result = {'registered' : False , 'message' : 'مشاور با این شماره همراه وجود ندارد'}
 
-        code = 11111
+        code = random.randint(10000,99999)
         otp = models.Otp(mobile = mobile , code = code)
         otp.save()
+        SendSms(mobile ,code)
         return Response (result , status=status.HTTP_200_OK)
 
         
