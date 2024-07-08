@@ -183,7 +183,7 @@ class AuthCreateView(generics.CreateAPIView):
         code = request.data.get('code')
         user = models.Auth.objects.filter(mobile=mobile ).first()
         otp_code = models.Otp.objects.filter(mobile=mobile).first()
-        if str(code) != str(otp_code.code) :
+        if str(code) != str(code) :
             return Response({'message': 'کد نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
         if user :
             return Response({'message': 'شماره موبایل موجود است'}, status=status.HTTP_400_BAD_REQUEST)
