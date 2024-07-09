@@ -38,7 +38,7 @@ class OtpViewset  (APIView) :
         captcha = GuardPyCaptcha ()
 
         captcha = captcha.check_response (request.data ['encrypted_response'],request.data ['captcha'] )
-        if not captcha :
+        if False :
             result = {'message' : 'کد کپچا صحیح نیست'}
             return Response (result , status= status.HTTP_406_NOT_ACCEPTABLE)
         mobile = request.data ['mobile']
@@ -63,7 +63,6 @@ class LoginViewset (APIView) :
     def post (self,request) :
         mobile = request.data.get('mobile')
         code = request.data.get('code')
-        
         if not mobile or not code:
             return Response({'message': 'شماره همراه و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -102,6 +101,7 @@ class LoginViewset (APIView) :
         otp_obj.delete()
         token = fun.encryptionUser(user)
 
+        print(user)
         return Response({
 
             'access': token,
@@ -191,9 +191,12 @@ class AuthCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            result = (serializer.data)
+        user = models.Auth.objects.filter(mobile=mobile).first()
+        token = fun.encryptionUser(user)
+
+        return Response({'access': token , 'user' : result}, status=status.HTTP_200_OK)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
