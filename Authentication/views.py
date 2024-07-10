@@ -24,6 +24,12 @@ def SendSms(snd,txt):
     print(txt)
     return resp
 
+def datebirthtoage (date) :
+    date_now = datetime.datetime.now().date()
+    age = date_now -date
+    age = int (age.days/365.2425)
+    return age
+
 
 # captcha
 class CaptchaViewset (APIView) :
@@ -34,22 +40,25 @@ class CaptchaViewset (APIView) :
     
 # Otp as User
 class OtpViewset  (APIView) :
-    def post (self , request) : 
+    def post (self , request ) : 
         captcha = GuardPyCaptcha ()
 
         captcha = captcha.check_response (request.data ['encrypted_response'],request.data ['captcha'] )
         if False :
             result = {'message' : 'کد کپچا صحیح نیست'}
             return Response (result , status= status.HTTP_406_NOT_ACCEPTABLE)
-        mobile = request.data ['mobile']
-        if not mobile:
-            return Response({'message': 'شماره همراه لازم است'}, status=status.HTTP_400_BAD_REQUEST)
+        national_code = request.data ['national_code']
+        if not national_code:
+            return Response({'message': 'کد ملی  لازم است'}, status=status.HTTP_400_BAD_REQUEST)
         try :
-            user = models.Auth.objects.get(mobile = mobile)
-            result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
+            user = models.Auth.objects.get(national_code = national_code)
+        except models.Auth.DoesNotExist :
+            result = {'registered': False, 'message': 'کاربری با این کد ملی ثبت نام نشده لطفا ثبت نام کنید'}
 
-        except models.Auth.DoesNotExist: 
-            result = {'registered' : False , 'message' : 'کد تایید ارسال شد'}    
+            return Response(result, status=status.HTTP_404_NOT_FOUND)
+
+        mobile = user.mobile
+        result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
 
         code = 11111 #random.randint(10000,99999)
         otp = models.Otp(mobile=mobile,code =code)
@@ -58,21 +67,24 @@ class OtpViewset  (APIView) :
 
         return Response(result,status=status.HTTP_200_OK)
 
+
+
 # Login as user 
 class LoginViewset (APIView) :
     def post (self,request) :
-        mobile = request.data.get('mobile')
+        national_code = request.data.get('national_code')
         code = request.data.get('code')
-        if not mobile or not code:
-            return Response({'message': 'شماره همراه و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+        if not national_code or not code:
+            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            user = models.Auth.objects.get(mobile=mobile)
+            user = models.Auth.objects.get(national_code=national_code)
         except:
-            result = {'message': ' شماره موبایل موجود نیست لطفا ثبت نام کنید'}
+            result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
             return Response(result, status=status.HTTP_404_NOT_FOUND)
         
         try:
+            mobile = user.mobile
             otp_obj = models.Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
         except :
             
@@ -89,14 +101,9 @@ class LoginViewset (APIView) :
         dt = dt.total_seconds()
 
         if dt >120 :
-            result = {'message': 'کد معتبر نیست'}
+            result = {'message': 'زمان کد منقضی شده است'}
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            user = models.Auth.objects.get(mobile=mobile)
-        except models.Auth.DoesNotExist:
-            return Response({'message': 'کاربری با این شماره همراه وجود ندارد'}, status=status.HTTP_400_BAD_REQUEST)
-        
+    
         
         otp_obj.delete()
         token = fun.encryptionUser(user)
@@ -174,30 +181,36 @@ class LoginConsultant (APIView) :
 
 
 # Sign up as user
-class AuthCreateView(generics.CreateAPIView):
-    queryset = models.Auth.objects.all()
-    serializer_class = serializers.AuthSerializer
-
+class AuthCreateView(APIView):
     def post(self, request):
         mobile = request.data.get('mobile')
         code = request.data.get('code')
         user = models.Auth.objects.filter(mobile=mobile ).first()
-        otp_code = models.Otp.objects.filter(mobile=mobile).first()
-        if str(code) != str(code) :
+        otp_code = models.Otp.objects.filter(code=code).first()
+        if not otp_code :
             return Response({'message': 'کد نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
         if user :
-            return Response({'message': 'شماره موبایل موجود است'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'کاربر ثبت نام شده است لطفا وارد شوید'}, status=status.HTTP_400_BAD_REQUEST)
         
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            result = (serializer.data)
+        serializer = serializers.AuthSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({'message': 'لطفا تمامی فیلد ها پر شود', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        date_birth_str = request.data.get('date_birth')
+        try:
+            date_birth = datetime.datetime.strptime(date_birth_str, "%Y-%m-%d").date()
+        except ValueError:
+            return Response({'message': 'فرمت تاریخ تولد نادرست است. لطفا از فرمت YYYY-MM-DD استفاده کنید.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        age = datebirthtoage(date_birth)
+        if age < 18:
+            return Response({'message': 'سن شما کمتر از 18 سال است نمیتوانید ثبت نام کنید'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer.save()
+        result = (serializer.data)
         user = models.Auth.objects.filter(mobile=mobile).first()
         token = fun.encryptionUser(user)
 
         return Response({'access': token , 'user' : result}, status=status.HTTP_200_OK)
         
-
 
 
 

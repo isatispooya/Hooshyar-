@@ -12,7 +12,7 @@ class Auth (models.Model) :
     email = models.EmailField(unique=True, null=True, blank=True)
     password = models.CharField(max_length=800)
     agreement = models.BooleanField(default=False)
-    date_birth = models.DateField(null=True, blank=True)
+    date_birth = models.DateField()
     date_last_act = models.DateTimeField(default=timezone.now)
    
     def __str__(self):
