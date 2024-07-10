@@ -361,3 +361,18 @@ class CardBoxConsultantViewset (APIView) :
 
         return Response({'visits' : number_visits , 'consultations_waiting' : number_active_visit ,'Consultant_score' :consultant_score } , status=status.HTTP_200_OK )
 
+
+# show consultant profile for customer
+class ConsultantProfileForuserViewset (APIView) :
+    def get (self,request, id) :
+        Authorization = request.headers['Authorization']
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        consultant = models.Consultant.objects.filter(id = id).first()
+        serializer_consultant = ConsultantSerializer(consultant).data
+        return Response (serializer_consultant , status=status.HTTP_200_OK)

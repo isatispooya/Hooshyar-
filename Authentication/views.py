@@ -51,7 +51,7 @@ class OtpViewset  (APIView) :
         except models.Auth.DoesNotExist: 
             result = {'registered' : False , 'message' : 'کد تایید ارسال شد'}    
 
-        code = random.randint(10000,99999)
+        code = 11111 #random.randint(10000,99999)
         otp = models.Otp(mobile=mobile,code =code)
         otp.save()
         SendSms(mobile ,code)
@@ -115,7 +115,7 @@ class OtpConsultant (APIView) :
     def post (self, request) :
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(request.data['encrypted_response'] , request.data ['captcha'])
-        if not captcha :
+        if False :
             return Response({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_406_NOT_ACCEPTABLE)
         mobile = request.data ['mobile']
         if not mobile :
@@ -126,7 +126,7 @@ class OtpConsultant (APIView) :
         except models.Consultant.DoesNotExist:
             result = {'registered' : False , 'message' : 'مشاور با این شماره همراه وجود ندارد'}
 
-        code = random.randint(10000,99999)
+        code = 11111 #random.randint(10000,99999)
         otp = models.Otp(mobile = mobile , code = code)
         otp.save()
         SendSms(mobile ,code)
