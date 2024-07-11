@@ -12,7 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer
 from . import fun
 import random
-
+import requests
+import json
 
 frm ='30001526'
 usrnm = 'isatispooya'
@@ -38,6 +39,7 @@ class CaptchaViewset (APIView) :
         captcha = captcha.Captcha_generation (num_char = 4 , only_num = True) 
         return Response (captcha , status = status.HTTP_200_OK)
     
+
 # Otp as User
 class OtpViewset  (APIView) :
     def post (self , request ) : 
@@ -52,10 +54,34 @@ class OtpViewset  (APIView) :
             return Response({'message': 'کد ملی  لازم است'}, status=status.HTTP_400_BAD_REQUEST)
         try :
             user = models.Auth.objects.get(national_code = national_code)
-        except models.Auth.DoesNotExist :
-            result = {'registered': False, 'message': 'کاربری با این کد ملی ثبت نام نشده لطفا ثبت نام کنید'}
 
-            return Response(result, status=status.HTTP_404_NOT_FOUND)
+        except :
+            rest_api_token = 'ZtqX2dtvjxyYwnjInl8xGhGiynj5uKiO'
+            data = {'token' : rest_api_token , 'nc': national_code}
+            data = json.dumps(data)
+            headers = {'Content-Type': 'application/json'}
+            farasahm_user = requests.post('http://127.0.0.1:8000/service/datacustomer',data = data , headers=headers)
+
+            if farasahm_user.status_code == 200:
+                user_information = json.loads(farasahm_user.content.decode('utf-8')) 
+                new_user = models.Auth.objects.create(
+                    username = user_information['mobile'],
+                    name = user_information['name'],
+                    last_name = user_information['last_name'],
+                    national_code = user_information['nc'],
+                    mobile = user_information['mobile'],
+                    email = user_information['email'],
+                    password = random.randint(10000,99999),
+                    date_birth = user_information['date_birth'],
+                        )
+                new_user.save()
+
+  
+
+
+                return Response({'message' : 'کاربر قبلا در فراسهم ثبت نام شده است '}, status=status.HTTP_200_OK)
+            
+            return Response({'registered': False, 'message': 'کاربری با این کد ملی ثبت نام نشده لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
 
         mobile = user.mobile
         result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
