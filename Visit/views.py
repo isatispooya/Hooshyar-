@@ -124,8 +124,9 @@ class VisitViewset(APIView):
                 question_10 = question['9'] )
             question_model.save()
             serializer_question = serializers.QuestionSerializer(question_model)
-
-
+            print(question_model.question_1)
+            if question_model.question_1 < 18:
+                return Response({'message': 'your age <18'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             kind = models.KindOfCounseling.objects.filter(id= request.data.get ('kind'))
             if not kind.exists() :
@@ -142,9 +143,9 @@ class VisitViewset(APIView):
             except:
                 return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
 
-            date = models.SelectTime.objects.filter(date =date_str , time =time , reserve = False )
+            date = models.SelectTime.objects.filter(date =date_str , time =time , reserve = False ,consultant = consultant )
             if not date.exists () :
-                return Response ({'maybe the date, time is booked or the time is not available'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response ({'maybe the date, time is booked or the time is not available for this consultant'}, status=status.HTTP_406_NOT_ACCEPTABLE)
            
             date = date.first()
 

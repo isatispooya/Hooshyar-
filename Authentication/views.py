@@ -184,11 +184,9 @@ class LoginConsultant (APIView) :
 class AuthCreateView(APIView):
     def post(self, request):
         mobile = request.data.get('mobile')
-        code = request.data.get('code')
         user = models.Auth.objects.filter(mobile=mobile ).first()
-        otp_code = models.Otp.objects.filter(code=code).first()
-        if not otp_code :
-            return Response({'message': 'کد نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
+        if not mobile :
+            return Response({'message': 'شماره همراه الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         if user :
             return Response({'message': 'کاربر ثبت نام شده است لطفا وارد شوید'}, status=status.HTTP_400_BAD_REQUEST)
         
