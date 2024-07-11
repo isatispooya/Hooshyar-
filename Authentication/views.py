@@ -64,11 +64,13 @@ class OtpViewset  (APIView) :
 
             if farasahm_user.status_code == 200:
                 user_information = json.loads(farasahm_user.content.decode('utf-8')) 
+                user_information=user_information['customer']
+                print(user_information)
                 new_user = models.Auth.objects.create(
                     username = user_information['mobile'],
                     name = user_information['name'],
                     last_name = user_information['last_name'],
-                    national_code = user_information['nc'],
+                    national_code = national_code ,
                     mobile = user_information['mobile'],
                     email = user_information['email'],
                     password = random.randint(10000,99999),
