@@ -59,7 +59,7 @@ class OtpViewset  (APIView) :
             data = {'token' : rest_api_token , 'nc': national_code}
             data = json.dumps(data)
             headers = {'Content-Type': 'application/json'}
-            farasahm_user = requests.post('http://127.0.0.1:8000/service/datacustomer',data = data , headers=headers)
+            farasahm_user = requests.post('http://b.fidip.ir/service/datacustomer',data = data , headers=headers)
             if farasahm_user.status_code == 200:
                 user_information = json.loads(farasahm_user.content.decode('utf-8'))
                 print(user_information)
