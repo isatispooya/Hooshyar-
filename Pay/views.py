@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from Authentication import fun
 from Visit.models import KindOfCounseling
 from Visit.serializers import KindOfCounselingSerializer
-
+import json
 
 # show invoice before buy
 class PayViewset(APIView):
@@ -107,28 +107,19 @@ class DiscountViewset (APIView) :
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class invoice (APIView) :
+    def post  (self ,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        national_code = request.data.get('national_code')
+        rest_api_token = 'ZtqX2dtvjxyYwnjInl8xGhGiynj5uKiO'
+        data = {'token' : rest_api_token , 'nc': national_code}
+        data = json.dumps(data)
+        headers = {'Content-Type': 'application/json'}
+        farasahm_user = requests.post('http://b.fidip.ir/service/assetcustomer',data = data , headers=headers)
+        return Response({'message' : 'ok'})

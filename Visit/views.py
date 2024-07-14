@@ -113,15 +113,15 @@ class VisitViewset(APIView):
             question = request.data.get('questions')
             question_model = models.Question(
                 question_1 = datebirthtoage(user.date_birth) ,
-                question_2 = question['1'] ,
-                question_3 = question['2'] ,
-                question_4 = question['3'] ,
-                question_5 = question['4'] ,
-                question_6 = question['5'] ,
-                question_7 = question['6'] ,
-                question_8 = question['7'] ,
-                question_9 = question['8'] ,
-                question_10 = question['9'] )
+                question_2 = question['0'] ,
+                question_3 = question['1'] ,
+                question_4 = question['2'] ,
+                question_5 = question['3'] ,
+                question_6 = question['4'] ,
+                question_7 = question['5'] ,
+                question_8 = question['6'] ,
+                question_9 = question['7'] ,
+                question_10 = question[8] )
             question_model.save()
             serializer_question = serializers.QuestionSerializer(question_model)
             print(question_model.question_1)
@@ -374,6 +374,13 @@ class ConsultantProfileForuserViewset (APIView) :
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        consultant = models.Consultant.objects.filter(id = id).first()
-        serializer_consultant = ConsultantSerializer(consultant).data
-        return Response (serializer_consultant , status=status.HTTP_200_OK)
+        visit = models.Visit.objects.filter(id=id).first()
+        if not visit:
+            return Response({'error': 'Visit not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer_visit = serializers.VisitSerializer(visit).data
+        
+        return Response(serializer_visit, status=status.HTTP_200_OK)
+
+
+

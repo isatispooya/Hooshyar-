@@ -2,7 +2,7 @@ from rest_framework import serializers
 from . import models  
 from rest_framework import serializers
 from Stracture.serializers import SelectTimeSerializer
-
+from Authentication.serializers import ConsultantSerializer
 
 
 
@@ -13,7 +13,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'   
 
 class VisitSerializer(serializers.ModelSerializer):
-    consultant = serializers.PrimaryKeyRelatedField(queryset=models.Consultant.objects.all())
+    consultant = ConsultantSerializer()
     customer = serializers.PrimaryKeyRelatedField(queryset=models.Auth.objects.all())
     questions = serializers.PrimaryKeyRelatedField(queryset=models.Question.objects.all())
 
