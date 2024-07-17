@@ -17,7 +17,7 @@ class Question(models.Model):
         (9,'j'),
         (10,'k'),
     ]
-    question_1 = models.IntegerField()
+    # question_1 = models.IntegerField()
     question_2 = models.IntegerField(choices=question_choices)
     question_3 = models.IntegerField(choices=question_choices)
     question_4 = models.IntegerField(choices=question_choices)

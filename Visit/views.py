@@ -36,7 +36,7 @@ def datefromid (id) :
 def consultantfromid (id) :
     consultant = models.Consultant.objects.filter(id=id).first()
     serializer = ConsultantSerializer(consultant).data
-    return [consultant.name + ' ' + consultant.last_name  ,serializer['profile_photo'] ]
+    return [consultant.name + ' ' + consultant.last_name  ,serializer['profile_photo'], serializer ['rank'] ,serializer ['postion'] ]
 
 
 # id to kind
@@ -58,18 +58,18 @@ def questiontorisking (id):
     print (serializer_question)
 
     risktaking = 0
-    if serializer_question['question_1'] <35 :
-        risktaking = risktaking + 1.5
-    elif serializer_question['question_1'] <45 :
-        risktaking = risktaking + 1
-    elif serializer_question['question_1'] <55 :
-        risktaking = risktaking + 0.5
-    elif serializer_question['question_1'] <65 :
-        risktaking = risktaking + 0
-    elif serializer_question['question_1'] <75 :
-        risktaking = risktaking  -0.5
-    elif serializer_question['question_1'] >75 :
-        risktaking = risktaking  -1
+    # if serializer_question['question_1'] <35 :
+    #     risktaking = risktaking + 1.5
+    # elif serializer_question['question_1'] <45 :
+    #     risktaking = risktaking + 1
+    # elif serializer_question['question_1'] <55 :
+    #     risktaking = risktaking + 0.5
+    # elif serializer_question['question_1'] <65 :
+    #     risktaking = risktaking + 0
+    # elif serializer_question['question_1'] <75 :
+    #     risktaking = risktaking  -0.5
+    # elif serializer_question['question_1'] >75 :
+    #     risktaking = risktaking  -1
 
     risktaking = risktaking + int( serializer_question['question_2'])
     risktaking = risktaking + int(str( serializer_question['question_3']).replace('1', '0').replace('2', '1').replace('4', '5'))
@@ -79,7 +79,8 @@ def questiontorisking (id):
     risktaking = risktaking + int(str( serializer_question['question_7']).replace('1', '0').replace('3', '4').replace('4', '6'))
     risktaking = risktaking + int(str( serializer_question['question_8']).replace('1', '0').replace('2', '1').replace('3', '2').replace('4', '3'))
     risktaking = risktaking + int(str( serializer_question['question_9']).replace('1', '0').replace('3', '4').replace('4', '6'))
-    return [risktaking,serializer_question['question_10'],serializer_question['question_1']]
+    return [risktaking,serializer_question['question_10']]
+# ,serializer_question['question_1']
 
 
 # user's age
@@ -110,9 +111,9 @@ class VisitViewset(APIView):
                 return Response('no consultant', status=status.HTTP_400_BAD_REQUEST)
             consultant = consultant.first()
             serializer_consultant = ConsultantSerializer(consultant)
-            question = request.data.get('questions')
+            question = request.data.get('questions')['questionPostData']
+            print(question)
             question_model = models.Question(
-                question_1 = datebirthtoage(user.date_birth) ,
                 question_2 = question['0'] ,
                 question_3 = question['1'] ,
                 question_4 = question['2'] ,
@@ -121,12 +122,12 @@ class VisitViewset(APIView):
                 question_7 = question['5'] ,
                 question_8 = question['6'] ,
                 question_9 = question['7'] ,
-                question_10 = question[8] )
+                question_10 = question['8'] )
             question_model.save()
             serializer_question = serializers.QuestionSerializer(question_model)
-            print(question_model.question_1)
-            if question_model.question_1 < 18:
-                return Response({'message': 'your age <18'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            # print(question_model.question_1)
+            # if question_model.question_1 < 18:
+            #     return Response({'message': 'your age <18'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             kind = models.KindOfCounseling.objects.filter(id= request.data.get ('kind'))
             if not kind.exists() :
@@ -178,6 +179,8 @@ class VisitViewset(APIView):
         df = pd.DataFrame(serializer.data)
         df['consultant'] = df ['consultant'].apply(consultantfromid)
         df['consultant_photo'] = [x[1] for x in df ['consultant']]
+        df['consultant_rank'] = [x[2] for x in df ['consultant']]
+        df['consultant_postion'] = [x[3] for x in df ['consultant']]
         df['consultant'] = [x[0] for x in df ['consultant']]
         df['time'] = df ['date'].apply(timefromid)
         df['date'] = df ['date'].apply(datefromid)
@@ -189,6 +192,8 @@ class VisitViewset(APIView):
         df = df.to_dict('records')
 
         return Response(df, status=status.HTTP_200_OK)
+
+
 
 
 
@@ -379,8 +384,24 @@ class ConsultantProfileForuserViewset (APIView) :
             return Response({'error': 'Visit not found'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer_visit = serializers.VisitSerializer(visit).data
+    
+        df = pd.DataFrame([serializer_visit])
+        df['consultant'] = df ['consultant'].apply(consultantfromid)
+        df['consultant_photo'] = [x[1] for x in df ['consultant']]
+        df['consultant_rank'] = [x[2] for x in df ['consultant']]
+        df['consultant_postion'] = [x[3] for x in df ['consultant']]
+        df['consultant'] = [x[0] for x in df ['consultant']]
+        df['time'] = df ['date'].apply(timefromid)
+        df['date'] = df ['date'].apply(datefromid)
+        df['kind'] = df ['kind'].apply(kindfromid)
+        df['customer'] = df ['customer'].apply(userfromid)
+        df = df.drop(columns='create_at')
+        df['survey'] = df ['survey'].fillna(0)
+        df['note'] = df ['note'].fillna('')
+        df = df.to_dict('records')
+
         
-        return Response(serializer_visit, status=status.HTTP_200_OK)
+        return Response(df, status=status.HTTP_200_OK)
 
 
 

@@ -13,7 +13,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'   
 
 class VisitSerializer(serializers.ModelSerializer):
-    consultant = ConsultantSerializer()
+    consultant = serializers.PrimaryKeyRelatedField(queryset=models.Consultant.objects.all())
     customer = serializers.PrimaryKeyRelatedField(queryset=models.Auth.objects.all())
     questions = serializers.PrimaryKeyRelatedField(queryset=models.Question.objects.all())
 
