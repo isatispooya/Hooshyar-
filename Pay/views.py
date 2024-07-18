@@ -51,7 +51,7 @@ class PayViewset(APIView):
             kindofcounseling = KindOfCounseling.objects.filter(id=kind).first()
             serializer_kindofcounseling = KindOfCounselingSerializer(kindofcounseling)
             result = {'price' :int (serializer_kindofcounseling.data['price'])}
-            
+            off = 0
             try :
                 discount = models.Discount.objects.filter(code=code).first()
                 print(code)
