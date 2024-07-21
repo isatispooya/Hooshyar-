@@ -237,7 +237,7 @@ class AuthCreateView(APIView):
         if not mobile or not code  :
             return Response({'message': 'شماره همراه و کد تایید  الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         if user :
-            return Response({'message': 'کاربر ثبت نام شده است لطفا وارد شوید'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'این شماره همراه  ثبت نام شده است لطفا وارد شوید'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             otp_obj = models.Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
         except :
@@ -256,23 +256,37 @@ class AuthCreateView(APIView):
             result = {'message': 'زمان کد منقضی شده است'}
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = serializers.AuthSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({'message': 'لطفا تمامی فیلد ها پر شود', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         date_birth_str = request.data.get('date_birth')
         try:
-            date_birth = datetime.datetime.strptime(date_birth_str, "%Y-%m-%d").date()
+            date_birth = datetime.datetime.fromtimestamp(int(int(date_birth_str)/1000))
+            date_birth = date_birth.date()
         except ValueError:
             return Response({'message': 'فرمت تاریخ تولد نادرست است. لطفا از فرمت YYYY-MM-DD استفاده کنید.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        new_user = models.Auth(
+            username=request.data['username'],
+            name=request.data['name'],
+            last_name=request.data['last_name'],
+            national_code=request.data['national_code'],
+            mobile=request.data['mobile'],
+            email=request.data['email'],
+            password=request.data['password'],
+            date_birth=date_birth,
+            )
+
+
+        # if not serializer.is_valid():
+        #     return Response({'message': 'لطفا تمامی فیلد ها پر شود', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         age = datebirthtoage(date_birth)
         if age < 18:
             return Response({'message': 'سن شما کمتر از 18 سال است نمیتوانید ثبت نام کنید'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         
-        serializer.save()
-        result = (serializer.data)
+        serializer = serializers.AuthSerializer(new_user)
+        result = serializer.data
+        print(result)
         user = models.Auth.objects.filter(mobile=mobile).first()
         token = fun.encryptionUser(user)
+        new_user.save()
 
         return Response({'access': token , 'user' : result}, status=status.HTTP_200_OK)
         

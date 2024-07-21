@@ -405,3 +405,27 @@ class ConsultantProfileForuserViewset (APIView) :
 
 
 
+# set ranking of visit for customer
+class setsurvey (APIView) :
+    def post (self, request , id) :
+        Authorization = request.headers['Authorization']
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        visit = models.Visit.objects.filter(id = id).first()
+        if not visit :
+            return Response ({'message' : 'ویزیت پیدا نشد'}, status=status.HTTP_404_NOT_FOUND)
+        survey = request.data.get('survey')
+        survey = models.Visit.objects.filter(survey = survey).first()
+        
+
+        serializer = serializers.VisitSerializer(visit, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        return Response (serializer.data , status=status.HTTP_200_OK)
+
+
